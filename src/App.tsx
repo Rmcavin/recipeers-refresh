@@ -8,13 +8,13 @@ import { BrowserRouter, Route } from 'react-router-dom'
 import * as React from 'react';
 import { Provider } from 'react-redux'
 
-import store from './store'
+//import store from './store'
 
 
 class App extends React.Component {
   public render() {
     return (
-      <Provider store={store}>
+      // <Provider store={store}>
         <BrowserRouter>
           <div className="App">
           <NavBar />
@@ -24,7 +24,7 @@ class App extends React.Component {
           <Footer />
           </div>
         </BrowserRouter>
-      </Provider>
+      // </Provider>
     );
   }
 }

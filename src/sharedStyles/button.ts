@@ -7,7 +7,8 @@ const buttons = StyleSheet.create({
     borderRadius: '4px',
     margin: '0 5px',
     padding: '8px',
-    width: '65px'
+    width: '65px',
+    outline: 'none'
   },
   linkText: {
     color: 'white',

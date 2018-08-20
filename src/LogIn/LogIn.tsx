@@ -2,34 +2,38 @@ import { css, StyleSheet } from 'aphrodite';
 import * as React from 'react';
 import "../App.css"
 import buttons from '../sharedStyles/button'
+import authForms from '../sharedStyles/auth'
+import axios from 'axios';
 
 
 class LogIn extends React.Component<{},any> {
   constructor(props:any) {
     super(props);
     this.state = {
-      username: '', 
+      email: '', 
       password: '',
       formErrors: {
-        username: [''],
-        password: ['']
+        email: [''],
+        password: [''],
       },
-      formValid: false
+      formValid: false,
+      submissionStatus: null
     };
-
+    // this binding
     this.handleChange = this.handleChange.bind(this);
+    this.handleSubmit = this.handleSubmit.bind(this);
   }
 
   // check if the form is valid each update
   componentDidUpdate() {
     if (!this.state.formValid) {
-      if (this.state.formErrors.username.length === 0 && this.state.username && this.state.formErrors.password.length === 0 && this.state.password) {
+      if (this.state.formErrors.email.length === 0 && this.state.email && this.state.formErrors.password.length === 0 && this.state.password) {
         console.log('the form is valid!')
         this.setState({formValid: true});
       }
     }
     if (this.state.formValid) {
-      if (this.state.formErrors.username.length > 0 || this.state.formErrors.password.length > 0) {
+      if (this.state.formErrors.email.length > 0 || this.state.formErrors.password.length > 0) {
         console.log('the form is not valid!')
         this.setState({formValid: false});
       }
@@ -40,25 +44,25 @@ class LogIn extends React.Component<{},any> {
   public handleChange(e:any){
     const field = e.target.name;
     const value = e.target.value;
-    const errors = this.validate(field, value)
-
-    let formErrors = {...this.state.formErrors}
+    // check for errors in input
+    const errors = this.validate(field, value);
+    // grab and update the errors for the input field
+    let formErrors = {...this.state.formErrors};
     formErrors[field] = errors;
-    // check if the form is valid
-
     this.setState({[field]: value, formErrors});
   }
 
+  // checks for validation errors
   public validate(field:string, value:string) {
     let errors = [];
     switch (field) {
-      case 'username':
+      case 'email':
         // required
-        value.length === 0 ? errors.push('Username is required.'): null;
+        value.length === 0 ? errors.push('Email is required.'): null;
         // min length
-        value.length <= 8 ? errors.push('Username must be 8 characters long.') : null;
+        value.length <= 8 ? errors.push('Email must be 8 characters long.') : null;
         //max length
-        value.length >= 16 ? errors.push('Username must 16 or fewer characters long.') : false;
+        value.length >= 40 ? errors.push('Email must 30 or fewer characters long.') : false;
         break;
       case 'password':
         // required
@@ -75,66 +79,36 @@ class LogIn extends React.Component<{},any> {
   // submits form
   public handleSubmit(e:any) {
     e.preventDefault();
-    console.log('form submitted!', e.target)
+    let creds = {email: this.state.email, password: this.state.password}
+     axios.post('http://localhost:8001/auth/signIn', creds).then((res:any) => {
+       console.log('server res',res)
+     }).catch((err) => {
+      this.setState({submissionStatus: err.response.data})
+     })
   }
 
   public render() {
     // create lists of errors
-    let usernameErrors = this.state.formErrors.username.map( (error:string, index:number) => {
-      return error ? <li key={index} className={css(styles.errors)}>{error}</li> : null;
+    let emailErrors = this.state.formErrors.email.map( (error:string, index:number) => {
+      return error ? <li key={index} className={css(authForms.errors)}>{error}</li> : null;
     });
     let passwordErrors = this.state.formErrors.password.map( (error:string, index:number) => {
-      return error ? <li key={index} className={css(styles.errors)}>{error}</li> : null;
+      return error ? <li key={index} className={css(authForms.errors)}>{error}</li> : null;
     });
 
     return (
-      <div className={css(styles.card)}>
+      <div className={css(authForms.card)}>
         <h3>Welcome back!</h3>
         <form onSubmit={this.handleSubmit}>
-          <input className={css(styles.input)} type="text" name="username" placeholder="Username" value={this.state.username} onChange={this.handleChange}/>
-          <ul>{usernameErrors}</ul>
-          <input className={css(styles.input)} type="password" name="password" placeholder="Password" value={this.state.password} onChange={this.handleChange}/>
+          <input className={css(authForms.input)} type="text" name="email" placeholder="Email" value={this.state.email} onChange={this.handleChange}/>
+          <ul>{emailErrors}</ul>
+          <input className={css(authForms.input)} type="password" name="password" placeholder="Password" value={this.state.password} onChange={this.handleChange}/>
           <ul>{passwordErrors}</ul>
-          <input type="submit" value="Submit" disabled={!this.state.formValid} className={css(styles.disabled, buttons.button, buttons.linkText, buttons.linkHover)}/>
+          <input type="submit" value="Submit" disabled={!this.state.formValid} className={css(authForms.disabled, buttons.button, buttons.linkText, buttons.linkHover)}/>
+          <p className={css(authForms.errors, authForms.invalidLogin)}>{this.state.submissionStatus ? this.state.submissionStatus:null}</p>
         </form>
       </div>
     )}
   }
-
-  const styles = StyleSheet.create({
-    card: {
-     backgroundColor: 'white',
-     borderRadius: '4px',
-     boxShadow: '0 8px 4px -4px #929292',
-     margin: '50px auto',
-     minHeight: '200px',
-     padding: '50px',
-     width: '50%',
-    },
-    input: {
-      display: 'block',
-      margin: '10px auto',
-      padding: '10px',
-      width: '60%',
-      outline: 'none',
-      border: 'none',
-      borderBottom: '2px solid darkSalmon'
-    },
-    disabled: {
-      ':disabled': {
-        background: 'darkgrey',
-        cursor: 'not-allowed',
-        textDecoration: 'line-through',
-      }
-    },
-    errors: {
-      width: '60%',
-      margin: 'auto',
-      color: 'darkSalmon', 
-      fontStyle: 'oblique',
-      textAlign: 'left',
-      fontSize: '12px',
-    },
-  })
 
   export default LogIn;
